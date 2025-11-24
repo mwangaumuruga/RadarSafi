@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/services/chatbot_service.dart';
 import '../../theme/app_colors.dart';
-import '../../theme/app_text_styles.dart';
 import '../../widgets/radar_logo.dart';
-import '../report/report_screen.dart';
 import 'widgets/chat_message_bubble.dart';
 
 class ChatMessage {
@@ -29,6 +28,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   final messageController = TextEditingController();
   final ScrollController scrollController = ScrollController();
   final List<ChatMessage> messages = [];
+  final ChatbotService _chatbotService = ChatbotService();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -37,38 +38,63 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     super.dispose();
   }
 
-  void _sendMessage() {
-    if (messageController.text.trim().isEmpty) return;
+  void _sendMessage() async {
+    if (messageController.text.trim().isEmpty || _isLoading) return;
 
     final userMessage = messageController.text.trim();
     setState(() {
       messages.add(ChatMessage(text: userMessage, isUser: true));
+      _isLoading = true;
     });
     messageController.clear();
 
-    // Simulate agent response
-    Future.delayed(const Duration(milliseconds: 500), () {
-      setState(() {
-        messages.add(
-          ChatMessage(
-            text: 'This link is NOT legitimate.\n'
-                'Our database shows this message has been reported 324 times as a scam campaign pretending to be from Naivas.\n'
-                'Naivas has confirmed on their official channels that they are not running any voucher promotion online.\n'
-                'Advice: Do not click or forward the link. Delete it immediately.',
-            isUser: false,
-          ),
-        );
-      });
-      // Scroll to bottom
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (scrollController.hasClients) {
-          scrollController.animateTo(
-            scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
+    // Scroll to show user message
+    _scrollToBottom();
+
+    try {
+      // Get response from chatbot service
+      final response = await _chatbotService.getResponse(userMessage);
+
+      if (mounted) {
+        setState(() {
+          messages.add(
+            ChatMessage(
+              text: response,
+              isUser: false,
+            ),
           );
-        }
-      });
+          _isLoading = false;
+        });
+        _scrollToBottom();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          final errorMsg = e.toString();
+          messages.add(
+            ChatMessage(
+              text: 'I apologize, but I\'m having trouble processing your request right now.\n\n'
+                  'Error details: ${errorMsg.contains("Exception:") ? errorMsg.split("Exception:")[1].trim() : errorMsg}\n\n'
+                  'Please try again, or use the Report feature to verify suspicious content.',
+              isUser: false,
+            ),
+          );
+          _isLoading = false;
+        });
+        _scrollToBottom();
+      }
+    }
+  }
+
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (scrollController.hasClients) {
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     });
   }
 
@@ -162,8 +188,51 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 : ListView.builder(
                     controller: scrollController,
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: messages.length,
+                    itemCount: messages.length + (_isLoading ? 1 : 0),
                     itemBuilder: (context, index) {
+                      if (index == messages.length && _isLoading) {
+                        // Show loading indicator
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: AppColors.accentGreen,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.smart_toy,
+                                  color: AppColors.backgroundDeep,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      AppColors.accentGreen,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
                       return ChatMessageBubble(
                         message: messages[index].text,
                         isUser: messages[index].isUser,
@@ -189,6 +258,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     ),
                     child: TextField(
                       controller: messageController,
+                      enabled: !_isLoading,
                       style: const TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 15,
@@ -196,7 +266,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       ),
                       onSubmitted: (_) => _sendMessage(),
                       decoration: InputDecoration(
-                        hintText: 'Ask me anything...',
+                        hintText: _isLoading ? 'RadarSafi Agent is typing...' : 'Ask me about cybersecurity...',
                         hintStyle: const TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 15,
@@ -212,9 +282,11 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                             Icons.mic,
                             color: AppColors.textSecondary,
                           ),
-                          onPressed: () {
-                            // Handle voice input
-                          },
+                          onPressed: _isLoading
+                              ? null
+                              : () {
+                                  // Handle voice input
+                                },
                         ),
                       ),
                     ),
@@ -226,15 +298,26 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: AppColors.accentGreen,
+                    color: _isLoading ? AppColors.surfaceAlt : AppColors.accentGreen,
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
-                    icon: const Icon(
-                      Icons.send,
-                      color: AppColors.backgroundDeep,
-                    ),
-                    onPressed: _sendMessage,
+                    icon: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.textSecondary,
+                              ),
+                            ),
+                          )
+                        : const Icon(
+                            Icons.send,
+                            color: AppColors.backgroundDeep,
+                          ),
+                    onPressed: _isLoading ? null : _sendMessage,
                   ),
                 ),
               ],

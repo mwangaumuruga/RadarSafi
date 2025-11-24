@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
 
+import '../../core/services/reports_service.dart';
+import '../../core/services/verification_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/radar_logo.dart';
@@ -32,6 +34,26 @@ class _ReportScreenState extends State<ReportScreen> {
   bool _phoneVerificationComplete = false;
   bool _linkVerificationComplete = false;
   bool _emailMessageVerificationComplete = false;
+  
+  // Verification results
+  String _emailAgentResponse = '';
+  int _emailReportCount = 0;
+  String? _emailAdvice;
+  
+  String _imageAgentResponse = '';
+  int _imageReportCount = 0;
+  String? _imageAdvice;
+  
+  String _linkAgentResponse = '';
+  int _linkReportCount = 0;
+  String? _linkAdvice;
+  
+  String _phoneAgentResponse = '';
+  int _phoneReportCount = 0;
+  String? _phoneAdvice;
+  
+  final VerificationService _verificationService = VerificationService();
+  final ReportsService _reportsService = ReportsService();
 
   @override
   void initState() {
@@ -849,7 +871,9 @@ class _ReportScreenState extends State<ReportScreen> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                'This phone number is not the OFFICIAL contact of ${_selectedCompany ?? 'the company'}.',
+                                _phoneAgentResponse.isNotEmpty
+                                    ? _phoneAgentResponse
+                                    : 'Verifying...',
                                 style: const TextStyle(
                                   color: AppColors.textPrimary,
                                   fontSize: 15,
@@ -861,16 +885,43 @@ class _ReportScreenState extends State<ReportScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      // Report Count
-                      const Text(
-                        'This Number Has been reported 230 times',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 14,
-                          fontFamily: 'Poppins',
+                      if (_phoneReportCount > 0) ...[
+                        const SizedBox(height: 16),
+                        // Report Count
+                        Text(
+                          'This phone number has been reported $_phoneReportCount times',
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                            fontFamily: 'Poppins',
+                          ),
                         ),
-                      ),
+                      ],
+                      if (_phoneAdvice != null && _phoneAdvice!.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        // Advice Card
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceAlt,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.outline,
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            _phoneAdvice!,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                              fontFamily: 'Poppins',
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 24),
                       // Report Button
                       SizedBox(
@@ -1116,16 +1167,24 @@ class _ReportScreenState extends State<ReportScreen> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(
-                              Icons.cancel,
-                              color: AppColors.danger,
+                            Icon(
+                              _emailAgentResponse.toLowerCase().contains('scam') ||
+                                      _emailAgentResponse.toLowerCase().contains('not legit')
+                                  ? Icons.cancel
+                                  : Icons.check_circle,
+                              color: _emailAgentResponse.toLowerCase().contains('scam') ||
+                                      _emailAgentResponse.toLowerCase().contains('not legit')
+                                  ? AppColors.danger
+                                  : AppColors.accentGreen,
                               size: 24,
                             ),
                             const SizedBox(width: 12),
-                            const Expanded(
+                            Expanded(
                               child: Text(
-                                'This message sender email is not legit.......',
-                                style: TextStyle(
+                                _emailAgentResponse.isNotEmpty
+                                    ? _emailAgentResponse
+                                    : 'Verifying...',
+                                style: const TextStyle(
                                   color: AppColors.textPrimary,
                                   fontSize: 15,
                                   fontFamily: 'Poppins',
@@ -1136,16 +1195,43 @@ class _ReportScreenState extends State<ReportScreen> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      // Report Count
-                      const Text(
-                        'This sender email Has been reported 230 times',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 14,
-                          fontFamily: 'Poppins',
+                      if (_emailReportCount > 0) ...[
+                        const SizedBox(height: 16),
+                        // Report Count
+                        Text(
+                          'This sender email has been reported $_emailReportCount times',
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                            fontFamily: 'Poppins',
+                          ),
                         ),
-                      ),
+                      ],
+                      if (_emailAdvice != null && _emailAdvice!.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        // Advice Card
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceAlt,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.outline,
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            _emailAdvice!,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                              fontFamily: 'Poppins',
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 24),
                       // Report Button
                       SizedBox(
@@ -1324,104 +1410,74 @@ class _ReportScreenState extends State<ReportScreen> {
                           color: AppColors.surfaceAlt,
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Column(
+                        child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Warning
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(
-                                  Icons.cancel,
-                                  color: AppColors.danger,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                const Expanded(
-                                  child: Text(
-                                    'This link is NOT legitimate.',
-                                    style: TextStyle(
-                                      color: AppColors.textPrimary,
-                                      fontSize: 15,
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                            Icon(
+                              _linkAgentResponse.toLowerCase().contains('scam') ||
+                                      _linkAgentResponse.toLowerCase().contains('not legitimate')
+                                  ? Icons.cancel
+                                  : Icons.check_circle,
+                              color: _linkAgentResponse.toLowerCase().contains('scam') ||
+                                      _linkAgentResponse.toLowerCase().contains('not legitimate')
+                                  ? AppColors.danger
+                                  : AppColors.accentGreen,
+                              size: 24,
                             ),
-                            const SizedBox(height: 16),
-                            // Database report
-                            const Text(
-                              'Our database shows this message has been reported 324 times as a scam campaign pretending to be from Naivas.',
-                              style: TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 15,
-                                fontFamily: 'Poppins',
-                                height: 1.4,
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _linkAgentResponse.isNotEmpty
+                                    ? _linkAgentResponse
+                                    : 'Verifying...',
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 15,
+                                  fontFamily: 'Poppins',
+                                  height: 1.4,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 16),
-                            // Confirmation
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(
-                                  Icons.check_circle,
-                                  color: AppColors.accentGreen,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                const Expanded(
-                                  child: Text(
-                                    'Naivas has confirmed on their official channels that they are not running any voucher promotion online.',
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 15,
-                                      fontFamily: 'Poppins',
-                                      height: 1.4,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            // Advice
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Icon(
-                                  Icons.lock_outline,
-                                  color: AppColors.accentBlue,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                const Expanded(
-                                  child: Text(
-                                    'Advice: Do not click or forward the link. Delete it immediately.',
-                                    style: TextStyle(
-                                      color: AppColors.textSecondary,
-                                      fontSize: 15,
-                                      fontFamily: 'Poppins',
-                                      height: 1.4,
-                                    ),
-                                  ),
-                                ),
-                              ],
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      // Report Count
-                      const Text(
-                        'This link has been reported 110 times',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 14,
-                          fontFamily: 'Poppins',
+                      if (_linkReportCount > 0) ...[
+                        const SizedBox(height: 16),
+                        // Report Count
+                        Text(
+                          'This link has been reported $_linkReportCount times',
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                            fontFamily: 'Poppins',
+                          ),
                         ),
-                      ),
+                      ],
+                      if (_linkAdvice != null && _linkAdvice!.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        // Advice Card
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceAlt,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.outline,
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            _linkAdvice!,
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 14,
+                              fontFamily: 'Poppins',
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 24),
                       // Report Button
                       SizedBox(
@@ -1521,6 +1577,18 @@ class _ReportScreenState extends State<ReportScreen> {
           _linkController.clear();
           _emailMessageController.clear();
           _senderEmailController.clear();
+          _emailAgentResponse = '';
+          _emailReportCount = 0;
+          _emailAdvice = null;
+          _imageAgentResponse = '';
+          _imageReportCount = 0;
+          _imageAdvice = null;
+          _linkAgentResponse = '';
+          _linkReportCount = 0;
+          _linkAdvice = null;
+          _phoneAgentResponse = '';
+          _phoneReportCount = 0;
+          _phoneAdvice = null;
           // Set selectedType based on the item selected
           if (title == 'Phone Number') {
             selectedType = 'Phone Number';
@@ -1542,15 +1610,36 @@ class _ReportScreenState extends State<ReportScreen> {
 
     setState(() {
       _isVerifying = true;
+      _verificationComplete = false;
     });
 
-    // Simulate verification process
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Read image bytes
+      final imageBytes = await _selectedImage!.readAsBytes();
+      
+      // Call verification service
+      final result = await _verificationService.verifyImage(
+        imageBytes: imageBytes,
+        imageMimeType: 'image/jpeg',
+      );
 
-    setState(() {
-      _isVerifying = false;
-      _verificationComplete = true;
-    });
+      setState(() {
+        _isVerifying = false;
+        _verificationComplete = true;
+        _imageAgentResponse = result.agentResponse;
+        _imageReportCount = result.reportCount;
+        _imageAdvice = result.advice;
+      });
+    } catch (e) {
+      setState(() {
+        _isVerifying = false;
+        _verificationComplete = true;
+        _imageAgentResponse =
+            'RadarSafi Agent: An error occurred during image verification. Please try again.';
+        _imageReportCount = 0;
+        _imageAdvice = 'Please verify the image through official channels.';
+      });
+    }
   }
 
   void _handlePhoneNumberSubmit() async {
@@ -1562,15 +1651,34 @@ class _ReportScreenState extends State<ReportScreen> {
 
     setState(() {
       _isVerifying = true;
+      _phoneVerificationComplete = false;
     });
 
-    // Simulate verification process
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Call verification service
+      final result = await _verificationService.verifyPhoneNumber(
+        phoneNumber: _phoneNumberController.text.trim(),
+        claimedCompany: _selectedCompany,
+        reason: _selectedReason,
+      );
 
-    setState(() {
-      _isVerifying = false;
-      _phoneVerificationComplete = true;
-    });
+      setState(() {
+        _isVerifying = false;
+        _phoneVerificationComplete = true;
+        _phoneAgentResponse = result.agentResponse;
+        _phoneReportCount = result.reportCount;
+        _phoneAdvice = result.advice;
+      });
+    } catch (e) {
+      setState(() {
+        _isVerifying = false;
+        _phoneVerificationComplete = true;
+        _phoneAgentResponse =
+            'RadarSafi Agent: An error occurred during phone number verification. Please try again.';
+        _phoneReportCount = 0;
+        _phoneAdvice = 'Please verify the phone number through official channels.';
+      });
+    }
   }
 
   void _handleLinkSubmit() async {
@@ -1580,15 +1688,32 @@ class _ReportScreenState extends State<ReportScreen> {
 
     setState(() {
       _isVerifying = true;
+      _linkVerificationComplete = false;
     });
 
-    // Simulate verification process
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Call verification service
+      final result = await _verificationService.verifyLink(
+        url: _linkController.text.trim(),
+      );
 
-    setState(() {
-      _isVerifying = false;
-      _linkVerificationComplete = true;
-    });
+      setState(() {
+        _isVerifying = false;
+        _linkVerificationComplete = true;
+        _linkAgentResponse = result.agentResponse;
+        _linkReportCount = result.reportCount;
+        _linkAdvice = result.advice;
+      });
+    } catch (e) {
+      setState(() {
+        _isVerifying = false;
+        _linkVerificationComplete = true;
+        _linkAgentResponse =
+            'RadarSafi Agent: An error occurred during link verification. Please try again.';
+        _linkReportCount = 0;
+        _linkAdvice = 'Please verify the link through official channels.';
+      });
+    }
   }
 
   void _handleEmailMessageSubmit() async {
@@ -1599,36 +1724,160 @@ class _ReportScreenState extends State<ReportScreen> {
 
     setState(() {
       _isVerifying = true;
+      _emailMessageVerificationComplete = false;
     });
 
-    // Simulate verification process
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Call verification service
+      final result = await _verificationService.verifyEmailMessage(
+        senderEmail: _senderEmailController.text.trim(),
+        messageContent: _emailMessageController.text.trim(),
+      );
 
-    setState(() {
-      _isVerifying = false;
-      _emailMessageVerificationComplete = true;
-    });
+      setState(() {
+        _isVerifying = false;
+        _emailMessageVerificationComplete = true;
+        _emailAgentResponse = result.agentResponse;
+        _emailReportCount = result.reportCount;
+        _emailAdvice = result.advice;
+      });
+    } catch (e) {
+      setState(() {
+        _isVerifying = false;
+        _emailMessageVerificationComplete = true;
+        _emailAgentResponse =
+            'RadarSafi Agent: An error occurred during verification. Please try again.';
+        _emailReportCount = 0;
+        _emailAdvice = 'Please verify the message through official channels.';
+      });
+    }
   }
 
-  void _handleReport() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text(
-          'It has been reported successfully',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 16,
-            fontFamily: 'Poppins',
+  Future<void> _handleReport() async {
+    try {
+      Map<String, dynamic> reportData = {};
+      Map<String, dynamic> verificationResult = {};
+      String reportType = '';
+
+      // Collect data based on report type
+      if (selectedItem == 'Image/screenshot' && _verificationComplete) {
+        reportType = 'Image';
+        reportData = {
+          'hasImage': _selectedImage != null,
+          'imageName': _selectedImage?.name,
+        };
+        verificationResult = {
+          'agentResponse': _imageAgentResponse,
+          'reportCount': _imageReportCount,
+          'advice': _imageAdvice ?? '',
+        };
+      } else if (selectedItem == 'Phone Number' && _phoneVerificationComplete) {
+        reportType = 'Phone Number';
+        reportData = {
+          'phoneNumber': _phoneNumberController.text.trim(),
+          'claimedInstitution': _selectedCompany ?? '',
+          'reason': _selectedReason ?? '',
+        };
+        verificationResult = {
+          'agentResponse': _phoneAgentResponse,
+          'reportCount': _phoneReportCount,
+          'advice': _phoneAdvice ?? '',
+        };
+      } else if (selectedItem == 'web Link' && _linkVerificationComplete) {
+        reportType = 'Link';
+        reportData = {
+          'url': _linkController.text.trim(),
+        };
+        verificationResult = {
+          'agentResponse': _linkAgentResponse,
+          'reportCount': _linkReportCount,
+          'advice': _linkAdvice ?? '',
+        };
+      } else if (selectedItem == 'Email/Message' && _emailMessageVerificationComplete) {
+        reportType = 'Email/Message';
+        reportData = {
+          'senderEmail': _senderEmailController.text.trim(),
+          'messageContent': _emailMessageController.text.trim(),
+        };
+        verificationResult = {
+          'agentResponse': _emailAgentResponse,
+          'reportCount': _emailReportCount,
+          'advice': _emailAdvice ?? '',
+        };
+      } else {
+        // No verification completed yet
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Please verify the content first before reporting',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 16,
+                fontFamily: 'Poppins',
+              ),
+            ),
+            backgroundColor: AppColors.danger,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
+            duration: Duration(seconds: 3),
           ),
-        ),
-        backgroundColor: AppColors.accentGreen,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        duration: const Duration(seconds: 3),
-      ),
-    );
+        );
+        return;
+      }
+
+      // Save report to Firestore
+      await _reportsService.saveReport(
+        reportType: reportType,
+        reportData: reportData,
+        verificationResult: verificationResult,
+      );
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'It has been reported successfully',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 16,
+                fontFamily: 'Poppins',
+              ),
+            ),
+            backgroundColor: AppColors.accentGreen,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to save report: ${e.toString()}',
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 16,
+                fontFamily: 'Poppins',
+              ),
+            ),
+            backgroundColor: AppColors.danger,
+            behavior: SnackBarBehavior.floating,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   void _showCompanySelectionDialog() {

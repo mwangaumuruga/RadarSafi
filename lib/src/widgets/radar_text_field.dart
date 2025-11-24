@@ -10,6 +10,7 @@ class RadarTextField extends StatefulWidget {
     this.keyboardType,
     this.obscureText = false,
     this.hintText,
+    this.validator,
   });
 
   final String label;
@@ -17,6 +18,7 @@ class RadarTextField extends StatefulWidget {
   final TextInputType? keyboardType;
   final bool obscureText;
   final String? hintText;
+  final String? Function(String?)? validator;
 
   @override
   State<RadarTextField> createState() => _RadarTextFieldState();
@@ -52,6 +54,7 @@ class _RadarTextFieldState extends State<RadarTextField> {
           controller: widget.controller,
           keyboardType: widget.keyboardType,
           obscureText: _obscure,
+          validator: widget.validator,
           style: const TextStyle(
             color: AppColors.textPrimary,
             fontSize: 15,

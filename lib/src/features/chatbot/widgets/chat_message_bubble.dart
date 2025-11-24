@@ -119,12 +119,12 @@ class ChatMessageBubble extends StatelessWidget {
   }
 
   Widget _parseMessage(String message) {
-    // Parse formatted messages with icons
+    // Parse formatted messages with icons and bullet points
     final lines = message.split('\n');
     final widgets = <Widget>[];
 
     for (var i = 0; i < lines.length; i++) {
-      final line = lines[i].trim();
+      var line = lines[i].trim();
       if (line.isEmpty) {
         if (i < lines.length - 1) {
           widgets.add(const SizedBox(height: 8));
@@ -132,7 +132,39 @@ class ChatMessageBubble extends StatelessWidget {
         continue;
       }
 
-      if (line.contains('NOT legitimate')) {
+      // Handle bullet points
+      if (line.startsWith('• ') || line.startsWith('- ')) {
+        final bulletText = line.startsWith('• ') ? line.substring(2) : line.substring(2);
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '• ',
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 15,
+                    fontFamily: 'Poppins',
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    bulletText,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 15,
+                      fontFamily: 'Poppins',
+                      height: 1.5,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      } else if (line.contains('NOT legitimate')) {
         widgets.add(
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,7 +213,7 @@ class ChatMessageBubble extends StatelessWidget {
             ],
           ),
         );
-      } else if (line.startsWith('Advice:')) {
+      } else if (line.startsWith('Advice:') || line.toLowerCase().contains('important:')) {
         widgets.add(
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,6 +231,7 @@ class ChatMessageBubble extends StatelessWidget {
                     color: AppColors.textPrimary,
                     fontSize: 15,
                     fontFamily: 'Poppins',
+                    height: 1.5,
                   ),
                 ),
               ),
@@ -206,13 +239,21 @@ class ChatMessageBubble extends StatelessWidget {
           ),
         );
       } else {
+        // Regular text - check if it should be bold (starts with uppercase word or contains key phrases)
+        final isBold = line.split(' ').isNotEmpty && 
+                       (line.split(' ')[0].toUpperCase() == line.split(' ')[0] ||
+                        line.toLowerCase().contains('warning') ||
+                        line.toLowerCase().contains('caution'));
+        
         widgets.add(
           Text(
             line,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textPrimary,
               fontSize: 15,
+              fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
               fontFamily: 'Poppins',
+              height: 1.5,
             ),
           ),
         );
