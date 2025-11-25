@@ -34,7 +34,7 @@ If you're seeing a 404 error when using the LLM verification features, it means 
 You can test if your API key works by making a simple curl request:
 
 ```bash
-curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=YOUR_API_KEY" \
+curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSy************************" \
   -H 'Content-Type: application/json' \
   -d '{
     "contents": [{
@@ -45,7 +45,7 @@ curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generat
   }'
 ```
 
-Replace `YOUR_API_KEY` with your actual API key.
+⚠️ **Replace `AIzaSy************************` with your actual API key from Google Cloud Console.**
 
 ### 5. Alternative: Use Gemini 1.5 Flash (Recommended)
 

@@ -1,7 +1,11 @@
 # Google API Key Type Confirmation
 
+⚠️ **SECURITY WARNING: Never commit API keys to version control!**
+
 ## API Key Format
-Your API key format: `YOUR_API_KEY_HERE` (replace with your actual key)
+Your API key format: `AIzaSy...` (starts with "AIzaSy" followed by alphanumeric characters)
+
+**Example format (DO NOT USE THIS KEY):** `AIzaSy************************`
 
 This is a **standard Google API key** that can be used for:
 - Google Gemini API (Generative AI)
@@ -58,7 +62,7 @@ You can test if your API key works using curl:
 curl -X POST \
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent" \
   -H "Content-Type: application/json" \
-  -H "x-goog-api-key: YOUR_API_KEY" \
+  -H "x-goog-api-key: AIzaSy************************" \
   -d '{
     "contents": [{
       "parts": [{
@@ -68,7 +72,7 @@ curl -X POST \
   }'
 ```
 
-Replace `YOUR_API_KEY` with your actual key.
+⚠️ **Replace `AIzaSy************************` with your actual API key from Google Cloud Console.**
 
 ## Current Implementation
 

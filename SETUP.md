@@ -6,8 +6,13 @@ Create a `.env` file in the root directory of the project with the following con
 
 ```
 # Google API Configuration
-GOOGLE_API_KEY=YOUR_API_KEY_HERE
+GOOGLE_API_KEY=AIzaSy************************
 ```
+
+⚠️ **IMPORTANT:** 
+- Replace `AIzaSy************************` with your actual API key from Google Cloud Console
+- Never commit your real API key to git
+- The `.env` file is already in `.gitignore` to prevent accidental commits
 
 **Important:** Make sure the `.env` file is in the root directory (same level as `pubspec.yaml`).
 
