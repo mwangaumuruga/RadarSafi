@@ -6,7 +6,7 @@ Create a `.env` file in the root directory of the project with the following con
 
 ```
 # Google API Configuration
-GOOGLE_API_KEY=AIzaSyC3YlVw53bS6otPUC1C_pVRbnK5i1-7Uzc
+GOOGLE_API_KEY=YOUR_API_KEY_HERE
 ```
 
 **Important:** Make sure the `.env` file is in the root directory (same level as `pubspec.yaml`).

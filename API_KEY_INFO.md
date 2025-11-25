@@ -1,7 +1,7 @@
 # Google API Key Type Confirmation
 
 ## API Key Format
-Your API key format: `AIzaSyC3YlVw53bS6otPUC1C_pVRbnK5i1-7Uzc`
+Your API key format: `YOUR_API_KEY_HERE` (replace with your actual key)
 
 This is a **standard Google API key** that can be used for:
 - Google Gemini API (Generative AI)
